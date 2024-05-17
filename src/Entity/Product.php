@@ -22,9 +22,6 @@ class Product
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $system = null;
-
     #[ORM\Column]
     private ?float $price = null;
 
@@ -33,13 +30,6 @@ class Product
 
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
-
-    #[ORM\ManyToOne(inversedBy: 'products')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Marque $marque = null;
-
-    #[ORM\OneToMany(mappedBy: 'product', targetEntity: Media::class, orphanRemoval: true)]
-    private Collection $media;
 
     public function __construct()
     {
@@ -71,18 +61,6 @@ class Product
     public function setDescription(string $description): static
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getSystem(): ?string
-    {
-        return $this->system;
-    }
-
-    public function setSystem(string $system): static
-    {
-        $this->system = $system;
 
         return $this;
     }
@@ -123,45 +101,4 @@ class Product
         return $this;
     }
 
-    public function getMarque(): ?Marque
-    {
-        return $this->marque;
-    }
-
-    public function setMarque(?Marque $marque): static
-    {
-        $this->marque = $marque;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Media>
-     */
-    public function getMedia(): Collection
-    {
-        return $this->media;
-    }
-
-    public function addMedium(Media $medium): static
-    {
-        if (!$this->media->contains($medium)) {
-            $this->media->add($medium);
-            $medium->setProduct($this);
-        }
-
-        return $this;
-    }
-
-    public function removeMedium(Media $medium): static
-    {
-        if ($this->media->removeElement($medium)) {
-            // set the owning side to null (unless already changed)
-            if ($medium->getProduct() === $this) {
-                $medium->setProduct(null);
-            }
-        }
-
-        return $this;
-    }
 }

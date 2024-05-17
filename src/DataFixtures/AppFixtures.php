@@ -5,14 +5,13 @@ namespace App\DataFixtures;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use DateTimeImmutable;
-use App\Entity\Marque;
 use App\Entity\Product;
+use App\Entity\Client;
 
 class AppFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $products = [];
         $product_names = [
             'Iron Flip', 
             'Alpha One', 
@@ -48,6 +47,18 @@ class AppFixtures extends Fixture
             $product->setUpdatedAt(new DateTimeImmutable());
 
             $manager->persist($product);
+        }
+
+        for($i=0; $i < 5; $i++) {
+            $client = new Client();
+            $client->setUsername("client n°".$i);
+            $client->setEmail("client_".$i."@mailinator.com");
+            $client->setPassword('pass_'.$i);
+            $client->setIsVerify(true);
+            $client->setCreatedAt(new DateTimeImmutable());
+            $client->setUpdatedAt(new DateTimeImmutable());
+
+            $manager->persist($client);
         }
         $manager->flush();
     }

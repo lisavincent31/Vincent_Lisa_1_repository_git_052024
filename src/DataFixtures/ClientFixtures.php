@@ -8,6 +8,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Faker\Factory;
 
 use App\Entity\Client;
+use App\Entity\User;
 
 class ClientFixtures extends Fixture
 {
@@ -20,6 +21,7 @@ class ClientFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
+        $faker = Factory::create();
         // Création d'un administrateur
         $admin = new Client();
         $admin->setEmail("admin@bilemoapi.com");
@@ -34,6 +36,20 @@ class ClientFixtures extends Fixture
         $client->setPassword($this->passwordHasher->hashPassword($client, "password"));
         $manager->persist($client);
 
+        for($i=0; $i < 30; $i++) {
+            $user = new User();
+            $user->setFirstname($faker->firstname());
+            $user->setLastname($faker->lastname());
+            $user->setEmail($faker->email());
+
+            if($i <= 15) {
+                $user->setClient($admin);
+            }else{
+                $user->setClient($client);
+            }
+
+            $manager->persist($user);
+        }
         
 
         $manager->flush();

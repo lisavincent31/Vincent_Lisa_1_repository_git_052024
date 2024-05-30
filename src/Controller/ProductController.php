@@ -10,6 +10,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 use App\Repository\ProductRepository;
 use App\Entity\Product;
+
 class ProductController extends AbstractController
 {
     #[Route('/api/products', name: 'products', methods: ['GET'])]

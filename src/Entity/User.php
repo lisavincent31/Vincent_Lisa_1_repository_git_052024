@@ -11,19 +11,19 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getClient'])]
+    #[Groups(['getClient', 'getUsers'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getClient'])]
+    #[Groups(['getClient', 'getUsers'])]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getClient'])]
+    #[Groups(['getClient', 'getUsers'])]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getClient'])]
+    #[Groups(['getClient', 'getUsers'])]
     private ?string $email = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]

@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\Entity\Client;
 use App\Entity\User;
 
@@ -45,10 +47,16 @@ class ClientController extends AbstractController
     public function createUser(Request $request,
                                 EntityManagerInterface $manager,
                                 SerializerInterface $serializer,
-                                UrlGeneratorInterface $urlGenerator): JsonResponse
+                                UrlGeneratorInterface $urlGenerator, 
+                                ValidatorInterface $validator): JsonResponse
     {
         $user = $serializer->deserialize($request->getcontent(), User::class, 'json');
         $user->setClient($this->getUser());
+
+        $errors = $validator->validate($user);
+        if($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $manager->persist($user);
         $manager->flush();

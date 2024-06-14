@@ -6,7 +6,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\Serializer;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -23,7 +25,8 @@ class ClientController extends AbstractController
     #[Route('/api/clients/{id}', name: 'client', methods: ['GET'])]
     public function getOneClient(Client $client, SerializerInterface $serializer): JsonResponse
     {
-        $json = $serializer->serialize($client, 'json', ['groups' => 'getClient']);
+        $context = SerializationContext::create()->setGroups(['getUsers']);
+        $json = $serializer->serialize($client, 'json', $context);
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
@@ -42,8 +45,9 @@ class ClientController extends AbstractController
 
         $userList = $cachePool->get($idCache, function(ItemInterface $item) use ($userRepository, $page, $limit, $serializer, $client) {
             $item->tag("usersCache");
+            $context = SerializationContext::create()->setGroups(['getUsers']);
             $users = $userRepository->findAllByClientWithPagination($client, $page, $limit);
-            return $serializer->serialize($users, 'json', ['groups' => 'getUsers']);
+            return $serializer->serialize($users, 'json', $context);
         });
         
         return new JsonResponse($userList, Response::HTTP_OK, [], true);
@@ -54,7 +58,8 @@ class ClientController extends AbstractController
     {
         $client = $this->getUser();
         if($user->getClient() == $client) {
-            $json = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
+            $context = SerializationContext::create()->setGroups(['getUsers']);
+            $json = $serializer->serialize($user, 'json', $context);
             return new JsonResponse($json, Response::HTTP_OK, [], true);
         }
     }
@@ -78,7 +83,8 @@ class ClientController extends AbstractController
         $manager->persist($user);
         $manager->flush();
 
-        $json = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
+        $context = SerializationContext::create()->setGroups(['getUsers']);
+        $json = $serializer->serialize($user, 'json', $context);
         $location = $urlGenerator->generate('detail_user', ['client_id' => $this->getUser()->getId(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $cachePool->invalidateTags(["usersCache"]);

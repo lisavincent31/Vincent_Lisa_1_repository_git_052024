@@ -64,7 +64,8 @@ class ClientController extends AbstractController
                                 EntityManagerInterface $manager,
                                 SerializerInterface $serializer,
                                 UrlGeneratorInterface $urlGenerator, 
-                                ValidatorInterface $validator): JsonResponse
+                                ValidatorInterface $validator,
+                                TagAwareCacheInterface $cachePool): JsonResponse
     {
         $user = $serializer->deserialize($request->getcontent(), User::class, 'json');
         $user->setClient($this->getUser());
@@ -80,17 +81,23 @@ class ClientController extends AbstractController
         $json = $serializer->serialize($user, 'json', ['groups' => 'getUsers']);
         $location = $urlGenerator->generate('detail_user', ['client_id' => $this->getUser()->getId(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
+        $cachePool->invalidateTags(["usersCache"]);
+        
         return new JsonResponse($json, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
     #[Route('/api/clients/{client_id}/users/{id}', name: 'delete_user', methods: ['DELETE'])]
-    public function deleteUser(User $user, EntityManagerInterface $manager): JsonResponse
+    public function deleteUser(User $user, 
+                            EntityManagerInterface $manager,
+                            TagAwareCacheInterface $cachePool): JsonResponse
     {
         $client = $this->getUser();
 
         if($user->getClient() == $client) {
             $manager->remove($user);
             $manager->flush();
+
+            $cachePool->invalidateTags(["usersCache"]);
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }

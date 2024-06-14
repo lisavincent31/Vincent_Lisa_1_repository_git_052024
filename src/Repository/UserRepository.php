@@ -21,9 +21,9 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-//    /**
-//     * @return User[] Returns an array of User objects
-//     */
+   /**
+    * @return User[] Returns an array of User objects
+    */
    public function findByClient($value): array
    {
        return $this->createQueryBuilder('u')
@@ -35,6 +35,19 @@ class UserRepository extends ServiceEntityRepository
            ->getResult()
        ;
    }
+
+   /**
+    * @return User[] Returns an array of User objects
+    */
+    public function findAllByClientWithPagination($value, $page, $limit): array
+    {
+        $queryBuilder = $this->createQueryBuilder('user')
+                            ->andWhere('user.client = :val')
+                            ->setParameter('val', $value)
+                            ->setFirstResult(($page - 1) * $limit)
+                            ->setMaxResults($limit);
+        return $queryBuilder->getQuery()->getResult();
+    }
 
 //    public function findOneBySomeField($value): ?User
 //    {

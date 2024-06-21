@@ -52,6 +52,7 @@ class ClientController extends AbstractController
      * @param UserRepository $userRepository
      * @param SerializerInterface $serializer
      * @param Request $request
+     * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
      */
     #[Route('/api/users', name: 'users', methods: ['GET'])]
@@ -133,6 +134,10 @@ class ClientController extends AbstractController
      * 
      * @param Request $request
      * @param SerializerInterface $serializer
+     * @param EntityManagerInterface $manager
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param ValidatorInterface $validator
+     * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
      */
     #[Route('/api/users', name:'create_user', methods: ['POST'])]
@@ -148,7 +153,6 @@ class ClientController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }
-        // $user = $serializer->deserialize($request->getcontent(), User::class, 'json');
         $user->setClient($this->getUser());
 
         $errors = $validator->validate($user);
@@ -182,6 +186,8 @@ class ClientController extends AbstractController
      * @OA\Tag(name="Users")
      * 
      * @param User $user
+     * @param EntityManagerInterface $manager
+     * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
      */
     #[Route('/api/users/{id}', name: 'delete_user', methods: ['DELETE'])]

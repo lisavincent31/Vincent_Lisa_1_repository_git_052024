@@ -62,6 +62,9 @@ class ClientController extends AbstractController
                             UserRepository $userRepository): JsonResponse
     {
         $client = $this->getUser();
+        if(!$client) {
+            return new JsonResponse(["error" => "Vous devez être connecté."], Response::HTTP_UNAUTHORIZED);
+        }
 
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
@@ -100,10 +103,15 @@ class ClientController extends AbstractController
     public function getUserDetail(User $user, SerializerInterface $serializer): JsonResponse
     {
         $client = $this->getUser();
+        if(!$client) {
+            return new JsonResponse(["error" => "Vous devez être connecté."], Response::HTTP_UNAUTHORIZED);
+        }
         if($user->getClient() == $client) {
             $context = SerializationContext::create()->setGroups(['getUsers']);
             $json = $serializer->serialize($user, 'json', $context);
             return new JsonResponse($json, Response::HTTP_OK, [], true);
+        }else{
+            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -197,15 +205,24 @@ class ClientController extends AbstractController
     {
         $client = $this->getUser();
 
-        if($user->getClient() == $client) {
-            $manager->remove($user);
-            $manager->flush();
+        if(!$client) {
+            return new JsonResponse(["error" => "Vous devez être connecté."], Response::HTTP_UNAUTHORIZED);
+        }
 
-            $cachePool->invalidateTags(["usersCache-" . $client->getId()]);
+        if($user->getClient() == $client) {
+            try {
+                $manager->remove($user);
+                $manager->flush();
+    
+                $cachePool->invalidateTags(["usersCache-" . $client->getId()]);
+            }catch(\Exception $e) {
+                return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            }
+            
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }else{
-            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_BAD_REQUEST);
         }
     }
 }

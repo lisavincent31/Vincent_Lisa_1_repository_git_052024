@@ -22,7 +22,7 @@ use App\Entity\User;
 
 class ClientController extends AbstractController
 {
-    #[Route('/api/clients/{id}', name: 'client', methods: ['GET'])]
+    #[Route('/api/clients/{client_id}', name: 'client', methods: ['GET'])]
     public function getOneClient(Client $client, SerializerInterface $serializer): JsonResponse
     {
         $context = SerializationContext::create()->setGroups(['getUsers']);
@@ -30,7 +30,7 @@ class ClientController extends AbstractController
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/clients/{id}/users', name: 'users', methods: ['GET'])]
+    #[Route('/api/users', name: 'users', methods: ['GET'])]
     public function getUsers(SerializerInterface $serializer,
                             Request $request,
                             TagAwareCacheInterface $cachePool,
@@ -41,10 +41,10 @@ class ClientController extends AbstractController
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
         
-        $idCache = "getUserList-" . $page . "-" . $limit;
+        $idCache = "getUserList-" . $client->getId() . $page . "-" . $limit;
 
         $userList = $cachePool->get($idCache, function(ItemInterface $item) use ($userRepository, $page, $limit, $serializer, $client) {
-            $item->tag("usersCache");
+            $item->tag("usersCache-" . $client->getId());
             $context = SerializationContext::create()->setGroups(['getUsers']);
             $users = $userRepository->findAllByClientWithPagination($client, $page, $limit);
             return $serializer->serialize($users, 'json', $context);
@@ -53,7 +53,7 @@ class ClientController extends AbstractController
         return new JsonResponse($userList, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/clients/{client_id}/users/{id}', name: 'detail_user', methods: ['GET'])]
+    #[Route('/api/users/{id}', name: 'detail_user', methods: ['GET'])]
     public function getUserDetail(User $user, SerializerInterface $serializer): JsonResponse
     {
         $client = $this->getUser();
@@ -64,7 +64,7 @@ class ClientController extends AbstractController
         }
     }
 
-    #[Route('/api/clients/{client_id}/users', name:'create_user', methods: ['POST'])]
+    #[Route('/api/users', name:'create_user', methods: ['POST'])]
     public function createUser(Request $request,
                                 EntityManagerInterface $manager,
                                 SerializerInterface $serializer,
@@ -92,7 +92,7 @@ class ClientController extends AbstractController
         return new JsonResponse($json, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
-    #[Route('/api/clients/{client_id}/users/{id}', name: 'delete_user', methods: ['DELETE'])]
+    #[Route('/api/users/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user, 
                             EntityManagerInterface $manager,
                             TagAwareCacheInterface $cachePool): JsonResponse
@@ -103,9 +103,11 @@ class ClientController extends AbstractController
             $manager->remove($user);
             $manager->flush();
 
-            $cachePool->invalidateTags(["usersCache"]);
+            $cachePool->invalidateTags(["usersCache-" . $client->getId()]);
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        }else{
+            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
         }
     }
 }

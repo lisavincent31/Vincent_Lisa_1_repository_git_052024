@@ -52,6 +52,7 @@ class ClientController extends AbstractController
      * @param UserRepository $userRepository
      * @param SerializerInterface $serializer
      * @param Request $request
+     * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
      */
     #[Route('/api/users', name: 'users', methods: ['GET'])]
@@ -61,6 +62,9 @@ class ClientController extends AbstractController
                             UserRepository $userRepository): JsonResponse
     {
         $client = $this->getUser();
+        if(!$client) {
+            return new JsonResponse(["error" => "Vous devez être connecté."], Response::HTTP_UNAUTHORIZED);
+        }
 
         $page = $request->get('page', 1);
         $limit = $request->get('limit', 3);
@@ -99,10 +103,15 @@ class ClientController extends AbstractController
     public function getUserDetail(User $user, SerializerInterface $serializer): JsonResponse
     {
         $client = $this->getUser();
+        if(!$client) {
+            return new JsonResponse(["error" => "Vous devez être connecté."], Response::HTTP_UNAUTHORIZED);
+        }
         if($user->getClient() == $client) {
             $context = SerializationContext::create()->setGroups(['getUsers']);
             $json = $serializer->serialize($user, 'json', $context);
             return new JsonResponse($json, Response::HTTP_OK, [], true);
+        }else{
+            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_FORBIDDEN);
         }
     }
 
@@ -123,9 +132,9 @@ class ClientController extends AbstractController
      *      required=true,
      *      @OA\JsonContent(
      *          type="object",
-     *          @OA\Property(property="firstname", type="property_type"),
-     *          @OA\Property(property="lastname", type="property_type"),
-     *          @OA\Property(property="email", type="property_type"),
+     *          @OA\Property(property="firstname", type="string"),
+     *          @OA\Property(property="lastname", type="string"),
+     *          @OA\Property(property="email", type="string"),
      *      )
      * )
      * 
@@ -133,6 +142,10 @@ class ClientController extends AbstractController
      * 
      * @param Request $request
      * @param SerializerInterface $serializer
+     * @param EntityManagerInterface $manager
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param ValidatorInterface $validator
+     * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
      */
     #[Route('/api/users', name:'create_user', methods: ['POST'])]
@@ -148,7 +161,6 @@ class ClientController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }
-        // $user = $serializer->deserialize($request->getcontent(), User::class, 'json');
         $user->setClient($this->getUser());
 
         $errors = $validator->validate($user);
@@ -182,6 +194,8 @@ class ClientController extends AbstractController
      * @OA\Tag(name="Users")
      * 
      * @param User $user
+     * @param EntityManagerInterface $manager
+     * @param TagAwareCacheInterface $cachePool
      * @return JsonResponse
      */
     #[Route('/api/users/{id}', name: 'delete_user', methods: ['DELETE'])]
@@ -191,15 +205,24 @@ class ClientController extends AbstractController
     {
         $client = $this->getUser();
 
-        if($user->getClient() == $client) {
-            $manager->remove($user);
-            $manager->flush();
+        if(!$client) {
+            return new JsonResponse(["error" => "Vous devez être connecté."], Response::HTTP_UNAUTHORIZED);
+        }
 
-            $cachePool->invalidateTags(["usersCache-" . $client->getId()]);
+        if($user->getClient() == $client) {
+            try {
+                $manager->remove($user);
+                $manager->flush();
+    
+                $cachePool->invalidateTags(["usersCache-" . $client->getId()]);
+            }catch(\Exception $e) {
+                return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            }
+            
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }else{
-            return new JsonResponse(null, Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_FORBIDDEN);
         }
     }
 }

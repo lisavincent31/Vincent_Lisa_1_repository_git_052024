@@ -62,14 +62,17 @@ class ProductController extends AbstractController
 
         $idCache = "getProductList-" . $page . '-' . $limit;
        
-        //fetch all products
-        $products = $cachePool->get($idCache, function (ItemInterface $item) use ($productRepository, $page, $limit, $serializer) {
-            $item->tag("productsCache");
-            $productList = $productRepository->findAllWithPagination($page, $limit);
-            
-            return $serializer->serialize($productList, 'json'); // serialize in json
-        });
-        
+        try {
+            //fetch all products
+            $products = $cachePool->get($idCache, function (ItemInterface $item) use ($productRepository, $page, $limit, $serializer) {
+                $item->tag("productsCache");
+                $productList = $productRepository->findAllWithPagination($page, $limit);
+                
+                return $serializer->serialize($productList, 'json'); // serialize in json
+            });
+        }catch(\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
         return new JsonResponse($products, Response::HTTP_OK, [], true); // return the productList with response 200
     }
 
@@ -93,9 +96,13 @@ class ProductController extends AbstractController
     #[Route('/api/products/{id}', name: 'product', methods: ['GET'])]
     public function getOneProduct(Product $product, SerializerInterface $serializer): JsonResponse
     {
-        // fetch one specific book and serialize in json
-        $jsonProduct = $serializer->serialize($product, 'json');
-        // return the book with response status 200
+        try {
+            // fetch one specific product and serialize in json
+            $jsonProduct = $serializer->serialize($product, 'json');
+        }catch(\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+        // return the product with response status 200
         return new JsonResponse($jsonProduct, Response::HTTP_OK, [], true);
     }
 }

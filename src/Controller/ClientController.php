@@ -132,9 +132,9 @@ class ClientController extends AbstractController
      *      required=true,
      *      @OA\JsonContent(
      *          type="object",
-     *          @OA\Property(property="firstname", type="property_type"),
-     *          @OA\Property(property="lastname", type="property_type"),
-     *          @OA\Property(property="email", type="property_type"),
+     *          @OA\Property(property="firstname", type="string"),
+     *          @OA\Property(property="lastname", type="string"),
+     *          @OA\Property(property="email", type="string"),
      *      )
      * )
      * 

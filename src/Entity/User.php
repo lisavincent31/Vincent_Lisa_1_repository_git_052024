@@ -3,7 +3,29 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Hateoas\Configuration\Annotation as Hateoas;
+
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "users",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups={"getUsers"})
+ * )
+ * 
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "delete_user",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups={"getUsers"})
+ * )
+ */
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
@@ -16,14 +38,19 @@ class User
 
     #[ORM\Column(length: 255)]
     #[Groups(['getClient', 'getUsers'])]
+    #[Assert\NotBlank(message: "Le prénom de votre utilisateur est obligatoire.")]
+    #[Assert\Length(min:3, max:255, minMessage: "Le prénom doit contenir au moins {{limit}} caractères", maxMessage: "Le prénom ne peut pas faire plus de {{limit}} catactères")]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['getClient', 'getUsers'])]
+    #[Assert\NotBlank(message: "Le nom de votre utilisateur est obligatoire.")]
+    #[Assert\Length(min:3, max:255, minMessage: "Le nom doit contenir au moins {{limit}} caractères", maxMessage: "Le nom ne peut pas faire plus de {{limit}} catactères")]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['getClient', 'getUsers'])]
+    #[Assert\Email(message:"L'email n'est pas au bon format.")]
     private ?string $email = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]

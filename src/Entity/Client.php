@@ -1,39 +1,47 @@
-<?php
-
+<?php 
 namespace App\Entity;
 
 use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use JMS\Serializer\Annotation\Groups;
+
+use Hateoas\Configuration\Annotation as Hateoas;
+/**
+ * @Hateoas\Relation(
+ *     "self",
+ *     href = @Hateoas\Route(
+ *         "client",
+ *         parameters = { "id" = "expr(object.getId())" }
+ *     )
+ * )
+ */
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
-class Client
+class Client implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['getClient'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $username = null;
-
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 180, unique: true)]
+    #[Groups(['getClient'])]
     private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column]
+    #[Groups(['getClient'])]
+    private array $roles = [];
+
+    #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column]
-    private ?bool $is_verify = null;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $updatedAt = null;
-
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: User::class, orphanRemoval: true)]
+    #[Groups(['getClient'])]
     private Collection $users;
 
     public function __construct()
@@ -46,18 +54,6 @@ class Client
         return $this->id;
     }
 
-    public function getUsername(): ?string
-    {
-        return $this->username;
-    }
-
-    public function setUsername(string $username): static
-    {
-        $this->username = $username;
-
-        return $this;
-    }
-
     public function getEmail(): ?string
     {
         return $this->email;
@@ -66,11 +62,28 @@ class Client
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+        return $this;
+    }
+
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -78,49 +91,19 @@ class Client
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
     }
 
-    public function isIsVerify(): ?bool
+    public function eraseCredentials(): void
     {
-        return $this->is_verify;
+        // Clear temporary, sensitive data if any
     }
 
-    public function setIsVerify(bool $is_verify): static
+    public function getUsername(): string
     {
-        $this->is_verify = $is_verify;
-
-        return $this;
+        return $this->getUserIdentifier();
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
-    {
-        $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
     public function getUsers(): Collection
     {
         return $this->users;
@@ -132,19 +115,16 @@ class Client
             $this->users->add($user);
             $user->setClient($this);
         }
-
         return $this;
     }
 
     public function removeUser(User $user): static
     {
         if ($this->users->removeElement($user)) {
-            // set the owning side to null (unless already changed)
             if ($user->getClient() === $this) {
                 $user->setClient(null);
             }
         }
-
         return $this;
     }
 }

@@ -111,7 +111,7 @@ class ClientController extends AbstractController
             $json = $serializer->serialize($user, 'json', $context);
             return new JsonResponse($json, Response::HTTP_OK, [], true);
         }else{
-            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_FORBIDDEN);
         }
     }
 
@@ -222,7 +222,7 @@ class ClientController extends AbstractController
 
             return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }else{
-            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['error' => "Vous n'avez pas les autorisations nécessaires."], Response::HTTP_FORBIDDEN);
         }
     }
 }

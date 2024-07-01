@@ -59,5 +59,5 @@ JWT_PASSPHRASE=mot_de_passe
 ## Documentation
 
 Retrouvez toute la documentation du projet BileMo en suivant ce lien :
-127.0.0.1:8001/api/doc
+[Documentation](http://127.0.0.1:8000/api/doc)
 

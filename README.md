@@ -56,6 +56,12 @@ JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
 JWT_PASSPHRASE=mot_de_passe
 ```
 
+## Lancer le serveur
+
+```bash
+symfony serve:start
+```
+
 ## Documentation
 
 Retrouvez toute la documentation du projet BileMo en suivant ce lien :

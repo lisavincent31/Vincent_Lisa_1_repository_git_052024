@@ -18,6 +18,7 @@ composer install
 ```
 
 ### Configuration de la base de donnée
+
 Configurez votre base de données dans le fichier **.env** à la racine du dossier. Assurez-vous d'avoir configuré les paramètres appropriés pour votre environnement de développement.
 
 Une fois votre fichier configuré vous pouvez initialiser la base de données avec les commandes suivantes :
@@ -30,7 +31,8 @@ php bin/console doctrine:fixtures:load
 
 ### Configuration des Fixtures
 
-Si vous rencontrez une erreur concernant les commandes de fixtures, 
+Si vous rencontrez une erreur concernant les commandes de fixtures :
+
 - vérifier dans votre fichier **.env** d'avoir la clé **APP_ENV=dev** ;
 - si l'erreur persiste, installez le bundle nécessaire avec :
 
@@ -65,5 +67,6 @@ symfony serve:start
 ## Documentation
 
 Retrouvez toute la documentation du projet BileMo en suivant ce lien :
+
 [Documentation](http://127.0.0.1:8000/api/doc)
 
